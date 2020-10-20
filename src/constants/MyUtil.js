@@ -1,18 +1,18 @@
 import axios from "axios";
-import { Alert, Platform, StatusBar, PermissionsAndroid } from "react-native";
+import { Alert, Platform,  PermissionsAndroid } from "react-native";
 import Config from "./Config";
 window.btoa = require('Base64').btoa;
 
 
 
-export async function _xirsysReq(methodName, data) {
+export async function _xirsysReq() {
     let result = "";
     _consoleLog("============ >>>>>> " + `_xirsysReq 요청`);
 
     try {
         let response = await axios({
             method: 'PUT',
-            url: "https://global.xirsys.net/_turn/thesaju",
+            url: Config.XIRSYS_URL,
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': "Basic " + btoa(Config.XIRSYS_AUTH)
@@ -43,8 +43,8 @@ export async function _xirsysReq(methodName, data) {
 
 
     } catch (error) {
-        _consoleLog("============ <<<<<< " + methodName + "() 네트워크 error : " + error);
-        Alert.alert("", `네트워크 환경이 불안정합니다. 앱을 재시작해주세요.\n\n${methodName}\n(${error.message})`);
+        _consoleLog("============ <<<<<< _xirsysReq " + "() 네트워크 error : " + error);
+        Alert.alert("", `네트워크 환경이 불안정합니다. 앱을 재시작해주세요.\n\n_xirsysReq\n(${error.message})`);
 
         return {
             IS_SUCCESS: false,
