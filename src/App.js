@@ -57,8 +57,9 @@ class App extends React.Component {
 
   _sendSocketMsg = async (jsonData) => {
     const { ws } = this;
-    console.log("_sendSocketMsg ws - : " + JSON.stringify(ws.readyState));
-    console.log("_sendSocketMsg data - : " + JSON.stringify(jsonData));
+    console.log("_sendSocketMsg()")
+    // console.log("_sendSocketMsg ws - : " + JSON.stringify(ws.readyState));
+    // console.log("_sendSocketMsg data - : " + JSON.stringify(jsonData));
     ws.send(JSON.stringify(jsonData))
   };
 
@@ -225,6 +226,7 @@ class App extends React.Component {
       this.remoteStream = event.stream
     };
     peer.onicecandidate = async ({ candidate }) => {
+      console.log("peer.onicecandidate ()")
       if (!candidate) return;
 
       // if (candidate.candidate.indexOf('typ relay') == -1) {
@@ -268,6 +270,7 @@ class App extends React.Component {
   }
 
   _handleAnswer = async () => {
+    console.log("_handleAnswer ()")
     const messages = this.state.mRoomData.messages;
     let offer = null;
 
@@ -277,22 +280,28 @@ class App extends React.Component {
     });
 
     await this._setupWebRTC()
-    await this.peer.setRemoteDescription(new RTCSessionDescription(offer))
 
-    messages.forEach((msg) => {
-      const msgObj = JSON.parse(msg);
-      if (msgObj.type === 'candidate') {
-        this.peer.addIceCandidate(new RTCIceCandidate({ sdpMLineIndex: msgObj.label, sdpMid: msgObj.id, candidate: msgObj.candidate }))
-      }
-    });
+    this.peer.setRemoteDescription(new RTCSessionDescription(offer))
+      .then(() => {
+        messages.forEach((msg) => {
+          const msgObj = JSON.parse(msg);
+          if (msgObj.type === 'candidate') {
+            this.peer.addIceCandidate(new RTCIceCandidate({ sdpMLineIndex: msgObj.label, sdpMid: msgObj.id, candidate: msgObj.candidate }))
+          }
+        });
 
-    const answer = await this.peer.createAnswer()
-    await this.peer.setLocalDescription(answer)
+        this.peer.createAnswer()
+          .then((localDescription) => {
+            this.peer.setLocalDescription(localDescription)
 
-    this._sendSocketMsg({
-      cmd: "send",
-      msg: JSON.stringify({ type: 'answer', sdp: this.peer.localDescription.sdp })
-    })
+            .then(() => {
+              this._sendSocketMsg({
+                cmd: "send",
+                msg: JSON.stringify({ type: 'answer', sdp: this.peer.localDescription.sdp })
+              })
+            }).catch((error) => { console.log("_handleAnswer ERROR : " + error) })
+          }).catch((error) => { console.log("_handleAnswer ERROR : " + error) })
+      }).catch((error) => { console.log("_handleAnswer ERROR : " + error) })
   }
 
   _confirmDisconnect = () => {
