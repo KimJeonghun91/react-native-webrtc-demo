@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, SafeAreaView, Text, View, Image, TouchableOpacity, TextInput, Alert, } from 'react-native';
-import { RTCPeerConnection, RTCMediaStream, RTCIceCandidate, RTCSessionDescription, RTCView, mediaDevices, } from 'react-native-webrtc';
+import { RTCPeerConnection, RTCMediaStream, RTCIceCandidate, RTCSessionDescription, RTCView, MediaStreamTrack, mediaDevices, getUserMedia, } from 'react-native-webrtc';
 import WebSocketClient from 'reconnecting-websocket'
 import Layout from "./constants/Layout";
 import * as MyUtil from "./constants/MyUtil";
