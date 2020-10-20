@@ -42,9 +42,17 @@ class App extends React.Component {
   }
 
   async componentDidMount() {
+    let { configuration } = this.state;
     if (!(await MyUtil._checkCameraPermission())) {
       return Alert.alert("", "설정에서 카메라, 메모리 읽기/쓰기 권한을 허용해주세요!");
     }
+
+    let result = await ServerApi._xirsysCert();
+    configuration.iceServers[0].username = result.DATA_RESULT.v.iceServers.username;
+    configuration.iceServers[0].credential = result.DATA_RESULT.v.iceServers.credential;
+
+    let newConfig = configuration;
+    this.setState({ configuration: newConfig })
   }
 
   _sendSocketMsg = async (jsonData) => {
