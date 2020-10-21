@@ -14,7 +14,7 @@
     "axios": "^0.20.0",
     "react": "16.13.1",
     "react-native": "0.63.3",
-    "react-native-webrtc": "1.75.3",
+    "react-native-webrtc": "^1.84.0",
     "reconnecting-websocket": "^4.4.0"
   },
   "devDependencies": {

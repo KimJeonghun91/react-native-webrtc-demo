@@ -128,7 +128,7 @@ class App extends React.Component {
             await this.peer.setRemoteDescription(new RTCSessionDescription(msg))
 
           } else if (msg.type === 'candidate') {
-            const candidate = { sdpMLineIndex: msg.label, sdpMid: msg.id, candidate: msg.candidate };
+            const candidate = { sdpMLineIndex: msg.sdpMLineIndex, sdpMid: msg.sdpMid, candidate: msg.candidate };
             if (this.peer) { this.peer.addIceCandidate(new RTCIceCandidate(candidate)); }
 
           } else if (msg.type === 'bye') {
@@ -229,16 +229,12 @@ class App extends React.Component {
       console.log("peer.onicecandidate ()")
       if (!candidate) return;
 
-      // if (candidate.candidate.indexOf('typ relay') == -1) {
-      //     console.log('omitting: ', candidate.candidate);
-      // } else {
-      const jsonIceCandidate = { type: "candidate", label: candidate.sdpMLineIndex, sdpMid: candidate.sdpMid, candidate: candidate.candidate };
+      const jsonIceCandidate = { type: "candidate", sdpMLineIndex: candidate.sdpMLineIndex, sdpMid: candidate.sdpMid, candidate: candidate.candidate };
       if (this.state.mRoomData.is_initiator === 'true') {
         const result = await ServerApi._webRtcReq(`message/${this.state.roomId}/${this.state.mRoomData.client_id}`, jsonIceCandidate);
       } else {
         this._sendSocketMsg(jsonIceCandidate);
       }
-      // }
     };
     peer.addStream(this.localStream);
     this.peer = peer;
@@ -281,27 +277,24 @@ class App extends React.Component {
 
     await this._setupWebRTC()
 
-    this.peer.setRemoteDescription(new RTCSessionDescription(offer))
-      .then(() => {
-        messages.forEach((msg) => {
-          const msgObj = JSON.parse(msg);
-          if (msgObj.type === 'candidate') {
-            this.peer.addIceCandidate(new RTCIceCandidate({ sdpMLineIndex: msgObj.label, sdpMid: msgObj.id, candidate: msgObj.candidate }))
-          }
-        });
+    this.peer.setRemoteDescription(new RTCSessionDescription(offer)).then(() => {
+      messages.forEach((msg) => {
+        const msgObj = JSON.parse(msg);
+        if (msgObj.type === 'candidate') {
+          this.peer.addIceCandidate(new RTCIceCandidate({ sdpMLineIndex: msgObj.sdpMLineIndex, sdpMid: msgObj.sdpMid, candidate: msgObj.candidate }))
+        }
+      });
 
-        this.peer.createAnswer()
-          .then((localDescription) => {
-            this.peer.setLocalDescription(localDescription)
+      this.peer.createAnswer().then((localDescription) => {
+        this.peer.setLocalDescription(localDescription).then(() => {
 
-            .then(() => {
-              this._sendSocketMsg({
-                cmd: "send",
-                msg: JSON.stringify({ type: 'answer', sdp: this.peer.localDescription.sdp })
-              })
-            }).catch((error) => { console.log("_handleAnswer ERROR : " + error) })
-          }).catch((error) => { console.log("_handleAnswer ERROR : " + error) })
+          this._sendSocketMsg({
+            cmd: "send",
+            msg: JSON.stringify({ type: 'answer', sdp: this.peer.localDescription.sdp })
+          })
+        }).catch((error) => { console.log("_handleAnswer ERROR : " + error) })
       }).catch((error) => { console.log("_handleAnswer ERROR : " + error) })
+    }).catch((error) => { console.log("_handleAnswer ERROR : " + error) })
   }
 
   _confirmDisconnect = () => {
