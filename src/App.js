@@ -6,6 +6,13 @@ import Layout from "./constants/Layout";
 import * as MyUtil from "./constants/MyUtil";
 import * as ServerApi from "./constants/ServerApi";
 
+// "stun:tk-turn2.xirsys.com",
+// "turn:tk-turn2.xirsys.com:80?transport=udp",
+// "turn:tk-turn2.xirsys.com:3478?transport=udp",
+// "turn:tk-turn2.xirsys.com:80?transport=tcp",
+// "turn:tk-turn2.xirsys.com:3478?transport=tcp",
+// "turns:tk-turn2.xirsys.com:443?transport=tcp",
+// "turns:tk-turn2.xirsys.com:5349?transport=tcp"
 
 class App extends React.Component {
   constructor(props) {
@@ -17,15 +24,7 @@ class App extends React.Component {
         iceServers: [{
           username: "",
           credential: "",
-          urls: [
-            "stun:tk-turn2.xirsys.com",
-            "turn:tk-turn2.xirsys.com:80?transport=udp",
-            "turn:tk-turn2.xirsys.com:3478?transport=udp",
-            "turn:tk-turn2.xirsys.com:80?transport=tcp",
-            "turn:tk-turn2.xirsys.com:3478?transport=tcp",
-            "turns:tk-turn2.xirsys.com:443?transport=tcp",
-            "turns:tk-turn2.xirsys.com:5349?transport=tcp"
-          ]
+          urls: []
         }],
         // iceTransportPolicy :"relay" // 제거하거나 "all"로 설정하여 강제 실행을 중지합니다.
       },
@@ -41,25 +40,11 @@ class App extends React.Component {
     this.ws = null;
   }
 
-  async componentDidMount() {
-    let { configuration } = this.state;
-    if (!(await MyUtil._checkCameraPermission())) {
-      return Alert.alert("", "설정에서 카메라, 메모리 읽기/쓰기 권한을 허용해주세요!");
-    }
-
-    let result = await ServerApi._xirsysCert();
-    configuration.iceServers[0].username = result.DATA_RESULT.v.iceServers.username;
-    configuration.iceServers[0].credential = result.DATA_RESULT.v.iceServers.credential;
-
-    let newConfig = configuration;
-    this.setState({ configuration: newConfig })
-  }
+  async componentDidMount() { }
 
   _sendSocketMsg = async (jsonData) => {
     const { ws } = this;
     console.log("_sendSocketMsg()")
-    // console.log("_sendSocketMsg ws - : " + JSON.stringify(ws.readyState));
-    // console.log("_sendSocketMsg data - : " + JSON.stringify(jsonData));
     ws.send(JSON.stringify(jsonData))
   };
 
@@ -77,6 +62,20 @@ class App extends React.Component {
 
   _joinRoom = async () => {
     console.log("_joinRoom() >>> ");
+
+    if (!(await MyUtil._checkCameraPermission())) {
+      return Alert.alert("", "설정에서 카메라, 메모리 읽기/쓰기 권한을 허용해주세요!");
+    }
+
+    let resultXC = await ServerApi._xirsysCert();
+
+    this.state.configuration = {
+      iceServers: [{
+        username: resultXC.DATA_RESULT.v.iceServers.username,
+        credential: resultXC.DATA_RESULT.v.iceServers.credential,
+        urls: resultXC.DATA_RESULT.v.iceServers.urls
+      }]
+    };
 
     const result = await ServerApi._webRtcReq('join/' + this.state.roomId, {});
     if (result.IS_SUCCESS === true) {
