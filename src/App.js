@@ -6,13 +6,6 @@ import Layout from "./constants/Layout";
 import * as MyUtil from "./constants/MyUtil";
 import * as ServerApi from "./constants/ServerApi";
 
-// "stun:tk-turn2.xirsys.com",
-// "turn:tk-turn2.xirsys.com:80?transport=udp",
-// "turn:tk-turn2.xirsys.com:3478?transport=udp",
-// "turn:tk-turn2.xirsys.com:80?transport=tcp",
-// "turn:tk-turn2.xirsys.com:3478?transport=tcp",
-// "turns:tk-turn2.xirsys.com:443?transport=tcp",
-// "turns:tk-turn2.xirsys.com:5349?transport=tcp"
 
 class App extends React.Component {
   constructor(props) {
