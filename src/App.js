@@ -193,6 +193,7 @@ class App extends React.Component {
 
 
   _setupWebRTC = async () => {
+    if (this.peer !== null) { return }
     const peer = new RTCPeerConnection(this.state.configuration);
 
     peer.onremovestream = (event) => { console.log("onremovestream : " + event) };
@@ -232,7 +233,10 @@ class App extends React.Component {
       if (this.state.mRoomData.is_initiator === 'true') {
         const result = await ServerApi._webRtcReq(`message/${this.state.roomId}/${this.state.mRoomData.client_id}`, jsonIceCandidate);
       } else {
-        this._sendSocketMsg(jsonIceCandidate);
+        this._sendSocketMsg({
+          cmd: "send",
+          msg: JSON.stringify(jsonIceCandidate)
+        })
       }
     };
     peer.addStream(this.localStream);
@@ -245,14 +249,12 @@ class App extends React.Component {
 
     try {
       const offer = await peer.createOffer()
-      this.offer = offer
       await peer.setLocalDescription(offer)
 
-      const result = await ServerApi._webRtcReq(`message/${this.state.roomId}/${this.state.mRoomData.client_id}`, { type: 'offer', sdp: this.peer.localDescription.sdp });
+      await ServerApi._webRtcReq(`message/${this.state.roomId}/${this.state.mRoomData.client_id}`, { type: 'offer', sdp: peer.localDescription.sdp });
 
     } catch (error) {
       Alert.alert("", "_handleConnect ERROR : " + error.message)
-      return
     }
   }
 
@@ -296,11 +298,6 @@ class App extends React.Component {
     }).catch((error) => { console.log("_handleAnswer ERROR : " + error) })
   }
 
-  _confirmDisconnect = () => {
-    this._handleDisconnect();
-  }
-
-
   _handleDisconnect = () => {
     if (this.peer) {
       this.peer.close()
@@ -342,7 +339,7 @@ class App extends React.Component {
         </View>
 
         <View style={styles.btnCircle}>
-          <TouchableOpacity onPress={this._confirmDisconnect}>
+          <TouchableOpacity onPress={() => { this._handleDisconnect() }}>
             <Image
               source={require("./img/btn_call_no.png")}
               style={{ height: 70, width: 70, }} />
